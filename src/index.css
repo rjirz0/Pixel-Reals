@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #1a1614;
+    color: #e5e5e5;
+    font-family: 'VT323', monospace;
+    font-size: 1.35rem;
+    image-rendering: pixelated;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-pixel {
+    font-family: 'Silkscreen', cursive, monospace;
+  }
+}
+
+/* Custom Minecraft GUI button and container styles */
+.mc-button {
+  background-color: #727272;
+  border-top: 4px solid #aaabaa;
+  border-left: 4px solid #aaabaa;
+  border-right: 4px solid #3d3d3d;
+  border-bottom: 4px solid #3d3d3d;
+  color: #ffffff;
+  text-shadow: 2px 2px 0px #212121;
+  transition: all 0.05s ease;
+  font-family: 'Silkscreen', monospace;
+}
+
+.mc-button:hover:not(:disabled) {
+  background-color: #848484;
+  border-top-color: #bcbcbc;
+  border-left-color: #bcbcbc;
+  color: #ffffa0; /* Classic MC hover yellow */
+  cursor: pointer;
+}
+
+.mc-button:active:not(:disabled) {
+  border-top: 4px solid #3d3d3d;
+  border-left: 4px solid #3d3d3d;
+  border-right: 4px solid #aaabaa;
+  border-bottom: 4px solid #aaabaa;
+}
+
+.mc-button-green {
+  background-color: #388e3c;
+  border-top: 4px solid #66bb6a;
+  border-left: 4px solid #66bb6a;
+  border-right: 4px solid #1b5e20;
+  border-bottom: 4px solid #1b5e20;
+  color: #ffffff;
+  text-shadow: 2px 2px 0px #0c3310;
+}
+
+.mc-button-green:hover:not(:disabled) {
+  background-color: #43a047;
+  border-top-color: #81c784;
+  border-left-color: #81c784;
+  color: #ffffa0;
+}
+
+.mc-panel {
+  background-color: #c6c6c6;
+  border-top: 4px solid #ffffff;
+  border-left: 4px solid #ffffff;
+  border-right: 4px solid #555555;
+  border-bottom: 4px solid #555555;
+  color: #212121;
+}
+
+.mc-panel-dark {
+  background-color: #2b2b2b;
+  border-top: 4px solid #4a4a4a;
+  border-left: 4px solid #4a4a4a;
+  border-right: 4px solid #141414;
+  border-bottom: 4px solid #141414;
+  color: #e5e5e5;
+}
+
+.mc-slot {
+  background-color: #8b8b8b;
+  border-top: 4px solid #373737;
+  border-left: 4px solid #373737;
+  border-right: 4px solid #ffffff;
+  border-bottom: 4px solid #ffffff;
+}
+
+.mc-slot:hover {
+  background-color: #9e9e9e;
+}
+
+.mc-tooltip {
+  background-color: #110411ee;
+  border: 3px solid #2d0c6e;
+  box-shadow: inset 2px 2px 0px #4d189f;
+  color: #ffffff;
+  font-family: 'VT323', monospace;
+  text-shadow: 2px 2px 0px #000000;
+}
+
+/* Dirt background pattern simulation */
+.bg-dirt-pattern {
+  background-color: #4a3319;
+  background-image: radial-gradient(#3a2712 15%, transparent 16%), radial-gradient(#5c4021 15%, transparent 16%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
+.bg-stone-pattern {
+  background-color: #595959;
+  background-image: radial-gradient(#474747 15%, transparent 16%), radial-gradient(#6e6e6e 15%, transparent 16%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
