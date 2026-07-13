@@ -31,7 +31,7 @@ export const Hero: React.FC<HeroProps> = ({ onPlayClick }) => {
 
         {/* Main Title */}
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-white tracking-wider uppercase mb-6 leading-tight drop-shadow-[4px_4px_0_#111]">
-          CRAFT & <span className="text-emerald-400 underline decoration-amber-500 decoration-4">CONQUER</span> THE REALMS
+          CRAFT & <span className="text-emerald-400 underline decoration-amber-500 decoration-4">DEMOLISH</span> THE REALMS
         </h1>
 
         {/* Subtitle */}
