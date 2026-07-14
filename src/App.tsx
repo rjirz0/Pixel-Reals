@@ -4,6 +4,7 @@ import { Footer } from './components/Footer';
 import { GameModes } from './components/GameModes';
 import { Hero } from './components/Hero';
 import { Leaderboard } from './components/Leaderboard';
+import { LeadCaptureForm } from './components/LeadCaptureForm';
 import { Navbar } from './components/Navbar';
 import { NewsSection } from './components/NewsSection';
 import { ServerStatus } from './components/ServerStatus';
@@ -48,6 +49,9 @@ export default function App() {
 
         {/* Server Status Indicators */}
         <ServerStatus />
+
+        {/* Lead Capture Registration Form for Beta Access */}
+        <LeadCaptureForm />
 
         {/* Interactive Centerpiece: 3x3 Crafting Bench */}
         <CraftingBench />
