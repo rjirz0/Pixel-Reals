@@ -9,18 +9,35 @@ export const LeadCaptureForm: React.FC = () => {
   const [generatedKey, setGeneratedKey] = useState('');
   const [localSubmissionsCount, setLocalSubmissionsCount] = useState(0);
   const [showDevInfo, setShowDevInfo] = useState(false);
+  const [backendDbConnected, setBackendDbConnected] = useState<boolean | null>(null);
+  const [loadingHealth, setLoadingHealth] = useState(true);
 
-  // MongoDB Atlas configuration loaded from environment variables
-  const env = (import.meta as any).env || {};
-  const ATLAS_ENDPOINT = env.VITE_MONGODB_ATLAS_ENDPOINT || '';
-  const ATLAS_API_KEY = env.VITE_MONGODB_ATLAS_API_KEY || '';
-  const DATABASE_NAME = env.VITE_MONGODB_DATABASE || 'pixel_realms';
-  const COLLECTION_NAME = env.VITE_MONGODB_COLLECTION || 'leads';
-  const DATA_SOURCE = env.VITE_MONGODB_DATA_SOURCE || 'Cluster0';
+  // Database configuration
+  const DATABASE_NAME = 'registration_sheet';
+  const COLLECTION_NAME = 'leads';
 
-  const isConfigured = !!(ATLAS_ENDPOINT && ATLAS_API_KEY);
+  const isConfigured = !!backendDbConnected;
 
   useEffect(() => {
+    // Check real backend database status
+    const checkBackendStatus = async () => {
+      try {
+        const res = await fetch('/api/health');
+        if (res.ok) {
+          const data = await res.json();
+          setBackendDbConnected(data.database === 'connected');
+        } else {
+          setBackendDbConnected(false);
+        }
+      } catch (e) {
+        console.error('Failed to contact backend health endpoint', e);
+        setBackendDbConnected(false);
+      } finally {
+        setLoadingHealth(false);
+      }
+    };
+    checkBackendStatus();
+
     // Check how many submissions we have stored locally
     try {
       const saved = localStorage.getItem('pixel_realms_leads');
@@ -48,10 +65,20 @@ export const LeadCaptureForm: React.FC = () => {
     setStatus('submitting');
     setErrorMessage('');
 
+    // Generate a beautiful, fun beta key for the user as a gamified reward upfront
+    const segments = [
+      'PR',
+      Math.floor(1000 + Math.random() * 9000).toString(),
+      Math.random().toString(36).substring(2, 6).toUpperCase()
+    ];
+    const key = segments.join('-');
+    setGeneratedKey(key);
+
     const submissionData = {
       email,
       timestamp: new Date().toISOString(),
       source: 'Pixel Realms Lead Capture',
+      accessKey: key,
       status: 'pending_activation'
     };
 
@@ -66,43 +93,24 @@ export const LeadCaptureForm: React.FC = () => {
       console.error('Failed to store backup locally:', err);
     }
 
-    // Try to send to MongoDB Atlas if configured
-    if (isConfigured) {
-      try {
-        const response = await fetch(ATLAS_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apiKey': ATLAS_API_KEY,
-            'Access-Control-Request-Headers': '*'
-          },
-          body: JSON.stringify({
-            dataSource: DATA_SOURCE,
-            database: DATABASE_NAME,
-            collection: COLLECTION_NAME,
-            document: submissionData
-          })
-        });
+    // Try to send to MongoDB Atlas via secure backend
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submissionData)
+      });
 
-        if (!response.ok) {
-          throw new Error(`Atlas Data API responded with status ${response.status}`);
-        }
-
-        console.log('Successfully written to MongoDB Atlas!');
-      } catch (err) {
-        console.error('MongoDB Atlas submit error (will fallback to browser cache storage):', err);
-        // Note: We still succeed because we stored it locally, but we'll show a small status warning in the developer help box.
+      if (response.ok) {
+        console.log('Successfully written to MongoDB Atlas via secure backend!');
+      } else {
+        console.warn(`Secure backend returned status: ${response.status}`);
       }
+    } catch (err) {
+      console.warn('Secure backend proxy not active or reachable.', err);
     }
-
-    // Generate a beautiful, fun beta key for the user as a gamified reward
-    const segments = [
-      'PR',
-      Math.floor(1000 + Math.random() * 9000).toString(),
-      Math.random().toString(36).substring(2, 6).toUpperCase()
-    ];
-    const key = segments.join('-');
-    setGeneratedKey(key);
 
     playCraftSuccessSound();
     setStatus('success');
@@ -253,28 +261,26 @@ export const LeadCaptureForm: React.FC = () => {
                     <span>Collection:</span>
                     <strong className="text-white">{COLLECTION_NAME}</strong>
                   </p>
-                  <p className="flex justify-between">
-                    <span>Data Source:</span>
-                    <strong className="text-white">{DATA_SOURCE}</strong>
-                  </p>
                 </div>
               </div>
 
               {/* Live sync connection indicator */}
               <div className={`p-3 border text-xs font-mono flex items-center gap-2.5 ${
-                isConfigured 
-                  ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' 
+                backendDbConnected
+                  ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300'
                   : 'bg-amber-950/40 border-amber-500/50 text-amber-300'
               }`}>
-                <span className={`w-2 h-2 rounded-full ${isConfigured ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'} shrink-0`} />
+                <span className={`w-2 h-2 rounded-full ${
+                  backendDbConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                } shrink-0`} />
                 <div className="w-full">
                   <p className="font-bold uppercase text-[10px]">
-                    {isConfigured ? 'Atlas Direct Link Active' : 'Offline Backup Vault Active'}
+                    {backendDbConnected ? 'Database Connected (Live)' : 'Offline Fallback Vault Active'}
                   </p>
                   <p className="text-[10px] text-gray-300 leading-tight mt-0.5">
-                    {isConfigured 
-                      ? 'Secure https API tunnel connected to Atlas cluster.' 
-                      : 'Data API keys pending. Saving submissions automatically inside your local browser storage.'}
+                    {backendDbConnected
+                      ? 'The secure backend is fully connected to your MongoDB Atlas database.'
+                      : 'MONGODB_URl environment variable is missing. Saving submissions to local browser storage fallback.'}
                   </p>
                 </div>
               </div>
@@ -298,27 +304,22 @@ export const LeadCaptureForm: React.FC = () => {
               className="text-xs text-amber-400 hover:text-amber-300 font-pixel flex items-center gap-1.5 underline cursor-pointer"
             >
               <HelpCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>{showDevInfo ? 'HIDE CONFIGURATION HELP' : 'HOW TO CONNECT MONGODB ATLAS?'}</span>
+              <span>{showDevInfo ? 'HIDE CONFIGURATION HELP' : 'HOW TO CONNECT YOUR DATABASE?'}</span>
             </button>
 
             {showDevInfo && (
               <div className="mt-3 bg-black/80 border border-amber-500/40 p-3 text-[11px] font-mono text-amber-200 leading-relaxed max-h-56 overflow-y-auto space-y-2">
                 <p className="font-bold text-white uppercase text-xs">🛠️ Setup Instructions:</p>
                 <p>
-                  This lead form is <strong>100% compatible with GitHub Pages (pure client-side static)</strong>! It sends submissions using the secure <strong>Atlas Data API</strong>.
+                  This application uses a secure Node/Express backend that connects to your MongoDB Atlas instance using the <code>MONGODB_URl</code> environment variable.
                 </p>
                 <ol className="list-decimal list-inside space-y-1 pl-1">
-                  <li>Log in to MongoDB Atlas and go to <strong>App Services</strong>.</li>
-                  <li>Enable the <strong>Data API</strong> for your cluster.</li>
-                  <li>Copy your unique <strong>URL Endpoint</strong> and generate an <strong>API Key</strong>.</li>
-                  <li>Set these values inside your project secrets / env panel:</li>
+                  <li>Get your connection string from MongoDB Atlas.</li>
+                  <li>Open the Settings/Secrets panel in the AI Studio UI.</li>
+                  <li>Create a secret named <code>MONGODB_URl</code> and set its value.</li>
                 </ol>
-                <div className="bg-black p-1.5 text-[10px] text-emerald-400 border border-[#333] select-all space-y-1">
-                  <p>VITE_MONGODB_ATLAS_ENDPOINT="https://..."</p>
-                  <p>VITE_MONGODB_ATLAS_API_KEY="your-key"</p>
-                </div>
-                <p>
-                  No server code required! Keep your repository fully static and free to host on GitHub Pages.
+                <p className="text-emerald-400 font-bold">
+                  Once configured, the status indicator turns green, and all user leads will automatically synchronize to your "registration_sheet" database!
                 </p>
               </div>
             )}
